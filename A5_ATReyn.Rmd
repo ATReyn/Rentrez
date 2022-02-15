@@ -1,0 +1,102 @@
+---
+title: "A5_ATReyn"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+# Part 1
+
+Loading data and libraries:
+```{r}
+# Add names of the files from GenBank that we are interested in looking at to a vector we can call upon
+ncbi_ids <- c("HQ433692.1","HQ433694.1","HQ433691.1")
+
+# Load Rentrez package
+library(rentrez)  
+
+# Fetch files we are interested in (designated by vector we created above) from Nucleotide database in FASTA format
+Bburg <- entrez_fetch(db = "nuccore", id = ncbi_ids, rettype = "fasta")
+
+```
+
+Creating "Sequences" object from Bburg:
+```{r}
+# Split sequences
+Sequences <- unlist(strsplit(Bburg, "\n\n"))
+
+# PReview Sequences
+print(Sequences)
+
+```
+
+Removing sequences from headers:
+```{r}
+# Separate out header
+header <- gsub("(^>.*sequence)\\n[ATCG].*", "\\1", Sequences)
+
+# Separate out sequences
+seq <- gsub("^>.*sequence\\n([ATCG].*)", "\\1", Sequences)
+
+# Create dataframe object of sequences and headers
+Sequences <- data.frame(Name = header, Sequence = seq)
+
+```
+
+Removing newline characters from dataframe:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
