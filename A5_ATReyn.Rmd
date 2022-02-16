@@ -7,17 +7,18 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+ 
 
-
-# Part 1
+### Part 1
 
 Loading data and libraries:
 ```{r}
 # Add names of the files from GenBank that we are interested in looking at to a vector we can call upon
 ncbi_ids <- c("HQ433692.1","HQ433694.1","HQ433691.1")
 
-# Load Rentrez package
-library(rentrez)  
+# Load packages
+library(rentrez) 
+library(dplyr)
 
 # Fetch files we are interested in (designated by vector we created above) from Nucleotide database in FASTA format
 Bburg <- entrez_fetch(db = "nuccore", id = ncbi_ids, rettype = "fasta")
@@ -27,14 +28,14 @@ Bburg <- entrez_fetch(db = "nuccore", id = ncbi_ids, rettype = "fasta")
 Creating "Sequences" object from Bburg:
 ```{r}
 # Split sequences
-Sequences <- unlist(strsplit(Bburg, "\n\n"))
+Sequences <- unlist(strsplit(Bburg, "\\s\\W"))
 
-# PReview Sequences
+# Preview Sequences
 print(Sequences)
 
 ```
 
-Removing sequences from headers:
+Separating sequences from headers and removing newline characters:
 ```{r}
 # Separate out header
 header <- gsub("(^>.*sequence)\\n[ATCG].*", "\\1", Sequences)
@@ -48,21 +49,102 @@ Sequences <- data.frame(Name = header, Sequence = seq)
 ```
 
 Removing newline characters from dataframe:
+```{r}
+
+# Removing newline characters
+Sequences$Sequence <- gsub("\\n", "", Sequences$Sequence)
+
+# Verifying removal was successful
+grepl("\\n", Sequences$Sequence)
+
+
+```
+
+Saving as new file:
+```{r}
+
+write.csv(Sequences, "./Sequences.csv", row.names = FALSE)
+
+```
+
+
+### Part 1 Question 4
+
+```{r}
+
+# Import Sequences.csv
+dat <- read.csv("./Sequences.csv")
+
+# Make sequences in dataframe into vector of strings
+seq1 <- as.character(dat$Sequence)
+
+# Create loop to count number of each nucleotide in sequence
+for(i in 1:length(seq1)){
+  print(seq1[i]) # Print full sequence
+  print(table(strsplit(seq1[i], ""))) # Print table of the frequency of each nucleotide
+}
+
+
+```
+
+![*Borrelia burgdorferi*](C:/Users/tripl/Documents/Coursework/5th Year/BIOL 432/Week 6/image.jpg)
+
+More information can be found on [Wikipedia](https://en.wikipedia.org/wiki/Borrelia_burgdorferi).
+
+Creating GC Content:
+```{r}
+
+# Create header vector
+seq2 <- as.character(dat$Name)
+seq2 <- sub(" .*", "", seq2) 
+seq2 <- sub(">", "", seq2)
+
+# Create empty object to fill with loop values
+gccont <- 0
+
+# Calculate GC Content as percentages for each sequence
+for(i in 1:length(seq1)){
+  gccont[i] <- (sum(grepl("G|C", unlist(strsplit(seq1[i], "")))) / nchar(seq1[i])) * 100 # Divide sum of GC by length of sequence to get percent
+}
+
+# Create table to display GC Content
+count_tab <- data.frame(seq2, gccont) %>% 
+  rename(ID = seq2, GC_Content_Percent = gccont)
+
+# Print table
+print(count_tab)
+
+
+```
 
 
 
+### Part 2
 
+Downloading the COVID genome from GenBank:
+```{r}
 
+covid <- entrez_fetch(db = "nuccore", id = "NC_045512.2", rettype = "fasta")
 
+```
 
+Isolating the spike protein:
+```{r}
 
+# Remove newline characters
+covseq <- gsub("\\n", "", covid)
 
+# Remove everything before start of spike protein and after end of spike protein
+covspike <- paste0("ATGTTTGTTTTTCTTGTTT", gsub(".*ATGTTTGTTTTTCTTGTTT|GTCAAATTACATTACACATAA.*", "", covseq), "GTCAAATTACATTACACATAA")
 
+# Print spike protein sequence
+print(covspike)
 
+```
 
+### Would you say this gene is highly conserved or evolving rapidly? Why?
 
-
-
+I would argue that this gene is highly conserved. I received 100 matches to this gene in my BLAST search, all of which had alignment scores equal to or greater than 200 and percent matches greater than 99.97%, with most being 100% matches. If the gene was rapidly evolving, I would expect to see fewer perfect matches and more partial matches as the nucleotides in the spike protein sequence mutated.
 
 
 
